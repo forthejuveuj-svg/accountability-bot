@@ -5,11 +5,13 @@ Run: python bot.py
 """
 
 import logging
+import os
+import shutil
 import pytz
 from datetime import time
 from telegram.ext import ApplicationBuilder, CommandHandler
 
-from config import BOT_TOKEN, TIMEZONE, MORNING_HOUR, MORNING_MINUTE, EVENING_HOUR, EVENING_MINUTE
+from config import BOT_TOKEN, TIMEZONE, MORNING_HOUR, MORNING_MINUTE, EVENING_HOUR, EVENING_MINUTE, DB_PATH
 from database import init_db
 from handlers import (
     start_command,
@@ -36,6 +38,13 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    # Seed database: if DB_PATH doesn't exist yet but a bundled seed does, copy it
+    seed_path = os.path.join(os.path.dirname(__file__), "seed.db")
+    if not os.path.exists(DB_PATH) and os.path.exists(seed_path):
+        os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
+        shutil.copy2(seed_path, DB_PATH)
+        logger.info(f"Seeded database from {seed_path} to {DB_PATH}")
+
     # Initialize database
     init_db()
     logger.info("Database initialized.")
